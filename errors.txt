@@ -1,0 +1,59 @@
+    Checking codecrafters-git v0.1.0 (/home/ak/codecrafters-git-rust)
+error[E0532]: expected a pattern, found a function call
+  --> src/main.rs:72:9
+   |
+72 |         Ok(command) => {
+   |         ^^ not a tuple struct or tuple variant
+   |
+   = note: function calls are not allowed in patterns: <https://doc.rust-lang.org/book/ch18-00-patterns.html>
+help: consider importing this tuple variant instead
+   |
+1  + use std::result::Result::Ok;
+   |
+
+warning: unused import: `env::args`
+ --> src/main.rs:3:11
+  |
+3 | use std::{env::args, io::Read};
+  |           ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+error[E0308]: mismatched types
+  --> src/main.rs:24:29
+   |
+18 |     fn parse_args(args: &[String]) -> Result<Self, String> {
+   |                                       -------------------- expected `Result<Command, String>` because of return type
+...
+24 |             Some("init") => Ok(Self::Init),
+   |                             ^^^^^^^^^^^^^^ expected `Result<Command, String>`, found `Result<Command, Error>`
+   |
+   = note: expected enum `Result<_, String>`
+              found enum `Result<_, anyhow::Error>`
+
+error[E0308]: mismatched types
+  --> src/main.rs:29:17
+   |
+18 |     fn parse_args(args: &[String]) -> Result<Self, String> {
+   |                                       -------------------- expected `Result<Command, String>` because of return type
+...
+29 |                 Ok(Self::CatFile { subCommand: args[2].clone(), object: args[3].clone() })
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<Command, String>`, found `Result<Command, Error>`
+   |
+   = note: expected enum `Result<_, String>`
+              found enum `Result<_, anyhow::Error>`
+
+warning: variable does not need to be mutable
+  --> src/main.rs:53:24
+   |
+53 |                    let mut file = fs::File::open(path).unwrap();
+   |                        ----^^^^
+   |                        |
+   |                        help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+Some errors have detailed explanations: E0308, E0532.
+For more information about an error, try `rustc --explain E0308`.
+warning: `codecrafters-git` (bin "codecrafters-git") generated 2 warnings
+error: could not compile `codecrafters-git` (bin "codecrafters-git") due to 3 previous errors; 2 warnings emitted
