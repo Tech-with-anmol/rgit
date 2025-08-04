@@ -11,6 +11,7 @@ use flate2::write::ZlibEncoder;
 use std::path::Path;
 use std::io::Write;
 use sha1::{Sha1, Digest};
+use std::str;
 
 enum Command {
     Init,
@@ -127,29 +128,35 @@ impl Command {
                     std::process::exit(1);
                 });
                 let mut decoder = ZlibDecoder::new(file);
-                let mut content = String::new();
-                decoder.read_to_string(&mut content).unwrap_or_else(|e| {
+                let mut content = Vec::new();
+                decoder.read_to_end(&mut content).unwrap_or_else(|e| {
                     eprintln!("Error reading from zlib decoder: {}", e);
                     std::process::exit(1);
                 });
-                let null_index = content.find('\0').unwrap_or_else(|| {
+                let null_index = content.iter().position(|&a| a == 0).unwrap_or_else(|| {
                     eprintln!("Error finding null char in content");
                     std::process::exit(1);
                 });
-                let content = content.get(null_index + 1..).unwrap_or_else(|| {
-                    eprintln!("Error getting content after null char");
-                    std::process::exit(1);
-                });
-                let lines: Vec<&str> = content.lines().collect();
-                for line in lines {
-                    let parts: Vec<&str> = line.split_whitespace().collect();
-                    let _object_type = parts.get(0).unwrap_or(&"");
-                    let _object_sha = parts.get(2).unwrap_or(&"");
-                    let object_name = parts.get(1).unwrap_or(&"");
-                    println!("{}", object_name);
-
-                }
-
+                let content = &content[null_index+1..];
+                let mut i = 0;
+                while i < content.len() {
+                    let mode_end = content[i..].iter().position(|&a| a == b' ').unwrap_or_else(|| {
+                        eprintln!("Error finding mode end in content");
+                        std::process::exit(1);
+                    }) + i;
+                    let _mode = &content[i..mode_end];
+                    i = mode_end + 1;
+                    let name_end  = content[i..].iter().position(|&a| a == b'\0').unwrap_or_else(|| {
+                        eprintln!("Error finding name end in content");
+                        std::process::exit(1);
+                    }) + i;
+                    let name = &content[i..name_end];
+                    i = name_end + 1;
+                    let sha_end = i + 20;
+                    let _sha = &content[i..sha_end];
+                    println!("{}", String::from_utf8_lossy(name));
+                    i = sha_end;
+               }
                
             }
 
