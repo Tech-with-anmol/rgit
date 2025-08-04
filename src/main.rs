@@ -6,12 +6,20 @@ use std::{env::args, io::Read};
 use std::fs;
 use std::result::Result::Ok;
 use flate2::read::ZlibDecoder;
+use flate2::Compression;
+use flate2::write::ZlibEncoder;
+use std::path::Path;
+use std::io::Write;
+use sha1::{Sha1, Digest};
 
 enum Command {
     Init,
     CatFile {
         subCommand: String,
         object: String,
+    },
+    HashObject {
+        file: String,
     },
 }
 
@@ -28,6 +36,13 @@ impl Command {
                     return Err("Usge: rgit cat-file -p <object>".into());
                 }
                 Ok(Self::CatFile { subCommand: args[2].clone(), object: args[3].clone() })
+            },
+            Some("hash-object") => {
+                if args.len() < 3 || args[2] != "-w"{
+                    return Err("Usage: rgit hash-object -w <file>".into());
+                }
+                Ok(Self::HashObject { file: args[3].clone() })
+                
             },
             _ => Err(format!("Unknown command: {}", args[1])),
         }
@@ -60,6 +75,37 @@ impl Command {
 
                   print!("{}", content);
                 }
+            }
+            Self::HashObject { file } => {
+                let content = fs::read(file).unwrap_or_else(|_| {
+                    eprintln!("Error reading file: {}", file);
+                    std::process::exit(1);
+                });
+                let hasher_data = format!("blob {}\0{}", content.len(), String::from_utf8_lossy(&content));
+                let mut hasher = Sha1::new();
+                hasher.update(hasher_data.as_bytes());
+                let hash = hasher.finalize();
+                let hash_out = format!("{:x}", hash);
+                let dir = &hash_out[0..2];
+                let file_name = &hash_out[2..];
+                let object_dir = Path::new(".git/objects").join(dir);
+                let object_file = object_dir.join(file_name);
+                fs::create_dir_all(&object_dir).unwrap_or_else(|_| {
+                    eprintln!("Error creating directory: {}", object_dir.display());
+                    std::process::exit(1);
+                });
+                let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+                encoder.write_all(hasher_data.as_bytes()).unwrap_or_else(|_| {
+                    eprintln!("Error writing to zlib encoder");
+                    std::process::exit(1);
+                });
+                let compressed_data = encoder.finish().unwrap();
+                fs::write(&object_file, compressed_data).unwrap_or_else(|_| {
+                    eprintln!("Error writing to object file: {}", &object_file.display());
+                    std::process::exit(1);
+                });
+                println!("{}", hash_out);
+
             }
         }
     }
