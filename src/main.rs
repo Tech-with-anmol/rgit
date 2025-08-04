@@ -21,6 +21,9 @@ enum Command {
     HashObject {
         file: String,
     },
+    LsTree {
+        tree_sha: String,
+    },
 }
 
 impl Command {
@@ -43,6 +46,12 @@ impl Command {
                 }
                 Ok(Self::HashObject { file: args[3].clone() })
                 
+            },
+            Some("ls-tree") => {
+                if args.len() < 3 || args[2] != "--name-only"{
+                    return Err("Usage: rgit ls-tree --name-only <tree_sha>".into());
+                }
+                Ok(Self::LsTree { tree_sha: args[3].clone()})
             },
             _ => Err(format!("Unknown command: {}", args[1])),
         }
@@ -107,10 +116,51 @@ impl Command {
                 println!("{}", hash_out);
 
             }
-        }
-    }
 
-}
+            Self::LsTree {tree_sha} => {
+                let sha_dir = &tree_sha[0..2];
+                let sha_file = &tree_sha[2..];
+                let sha_object_dir = Path::new(".git/objects").join(&sha_dir);
+                let sha_object_file = sha_object_dir.join(sha_file);
+                let file = fs::File::open(&sha_object_file).unwrap_or_else(|_| {
+                    eprintln!("Error opening object file: {}", &sha_object_file.display());
+                    std::process::exit(1);
+                });
+                let mut decoder = ZlibDecoder::new(file);
+                let mut content = String::new();
+                decoder.read_to_string(&mut content).unwrap_or_else(|e| {
+                    eprintln!("Error reading from zlib decoder: {}", e);
+                    std::process::exit(1);
+                });
+                let null_index = content.find('\0').unwrap_or_else(|| {
+                    eprintln!("Error finding null char in content");
+                    std::process::exit(1);
+                });
+                let content = content.get(null_index + 1..).unwrap_or_else(|| {
+                    eprintln!("Error getting content after null char");
+                    std::process::exit(1);
+                });
+                let lines: Vec<&str> = content.lines().collect();
+                for line in lines {
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    let _object_type = parts.get(0).unwrap_or(&"");
+                    let _object_sha = parts.get(2).unwrap_or(&"");
+                    let object_name = parts.get(1).unwrap_or(&"");
+                    println!("{}", object_name);
+
+                }
+
+               
+            }
+
+            
+        }
+        
+    }
+}    
+
+
+
 
 fn main() {
     
