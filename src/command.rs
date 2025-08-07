@@ -1,5 +1,5 @@
 use crate::commands::{
-    cat_file, help,commit_tree, hash_object, init, ls_tree, write_tree,
+    cat_file, help,commit_tree, hash_object, init, ls_tree, write_tree, clone,
 };
 
 pub enum Command {
@@ -10,6 +10,7 @@ pub enum Command {
     LsTree { tree_sha: String },
     WriteTree,
     CommitTree { tree_sha: String, message: String, commit_sha: String  },
+    Clone { url: String, directory: Option<String> },
 }
 
 impl Command {
@@ -33,6 +34,11 @@ impl Command {
                 tree_sha: args[3].clone(),
             }),
             Some("write-tree") => Ok(Self::WriteTree),
+            Some("clone") if args.len() >= 3 => Ok(Self::Clone { 
+                url: args[2].clone(),
+                directory: args.get(3).cloned(),
+            }),
+
             Some(cmd) => Err(format!("Unknown command: {}", cmd)),
             None => Err("No command provided".into()),
         }
@@ -51,7 +57,11 @@ impl Command {
             Self::Help => help(), 
             Self::CommitTree { tree_sha, message, commit_sha } => {
                 commit_tree(tree_sha, message, Some(commit_sha));
+            },
+            Self::Clone { url, directory } => {
+                clone(url, directory.as_deref());
             }
+            
         }
     }
 }
