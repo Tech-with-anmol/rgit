@@ -1,0 +1,12 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: Run rgit help
+    init: cargo build
+    command: |
+      echo "Welcome to rgit (Rust Git Client)"
+      echo "Type ./target/debug/rgit <command> to try."
+      echo "Example: ./target/debug/rgit clone https://github.com/user/repo.git"
+      bash
+

@@ -41,7 +41,7 @@ impl Command {
             }),
             Some("push") if args.len() >= 3 => Ok(Self::Push {
                 remote: args[2].clone(),
-                branch: args.get(3).clone(),
+                branch: args[3].clone(),
             }),
 
             Some(cmd) => Err(format!("Unknown command: {}", cmd)),

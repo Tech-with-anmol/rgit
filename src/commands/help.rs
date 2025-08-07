@@ -62,5 +62,7 @@ pub fn help() {
     println!("  ls-tree --name-only <tree>  List the contents of a tree");
     println!("  write-tree                   Write the current index to a tree object");
     println!("  commit-tree <tree_sha> -p <commit_sha -m <message>    commit to a tree");
+    println!("  clone <url> [directory]      Clone a repository from a URL");
+    println!("  push <remote> <branch>       Push changes to a remote repository");
     println!("{}", "\nFor more information on a specific command, use 'rgit help <command>'.".yellow());
 }
