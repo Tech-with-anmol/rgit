@@ -37,8 +37,8 @@ pub fn write_tree(path: &Path) -> String {
             let subtree_sha = write_tree(&path);
             let mut entry_bytes = Vec::new();
             entry_bytes.extend_from_slice(format!("40000 {}\0", name).as_bytes());
-            entry_bytes.extend_from_slice(&hex::decode(subtree_sha).unwrap());
-            entries.push(entry_bytes);
+    entry_bytes.extend_from_slice(&hex::decode(subtree_sha).unwrap());
+    entries.push(entry_bytes);
         }
     }
 
