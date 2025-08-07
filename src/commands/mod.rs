@@ -6,7 +6,10 @@ pub mod write_tree;
 pub mod help;
 pub mod commit_tree;
 pub mod clone;
+pub mod push;
 
+
+pub use push::push;
 pub use clone::clone;
 pub use commit_tree::commit_tree;
 pub use init::init;
